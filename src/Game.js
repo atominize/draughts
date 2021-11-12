@@ -54,7 +54,8 @@ const Game = () => {
   const [isMarbleSel, setIsMarbleSel] = useState(false);
   const [selMarble, setSelMarble] = useState({});
   const [highlightPos, setHighlightPos] = useState([]);
-  const [restrictMove, setRestrictMove] = useState(false);
+  const [restrictMove, setRestrictMove] = useState({ ans: false, value: [] });
+  const [posToCheckChop, setPosToCheckChop] = useState([]);
   // setMarbles([])
   // console.log(marbles);
 
@@ -64,7 +65,18 @@ const Game = () => {
     // console.log(checkIfAllowed(i));
 
     //Disable all movement
-    if (restrictMove) return;
+    if (restrictMove.ans) {
+      if (restrictMove.value.includes(i)) {
+        handleMove(selMarble, marbles[i]);
+        removeMarble(
+          selMarble.position,
+          marbles[i].position,
+          marbles,
+          setMarbles
+        );
+      }
+      return;
+    }
 
     // Rule to prevent selecting light square
     if (!checkIfAllowed(i)) {
@@ -96,7 +108,20 @@ const Game = () => {
         preventJumpingMove(selMarble, marbles[i])
       ) {
         handleMove(selMarble, marbles[i]);
-        checkForchopping(marbles, !isBlackTurn, i, setHighlightPos);
+        console.log(posToCheckChop.length);
+        const newPosToCheck = posToCheckChop.slice();
+        newPosToCheck.push(i);
+        setPosToCheckChop(newPosToCheck);
+        if (posToCheckChop.length < 1) return;
+        checkForchopping(
+          marbles,
+          !isBlackTurn,
+          newPosToCheck,
+          setHighlightPos,
+          setRestrictMove,
+          setSelMarble
+        );
+
         return;
       } else {
         setHighlightPos([selMarble.position]);
@@ -107,6 +132,26 @@ const Game = () => {
     }
     setIsMarbleSel(true);
     setSelMarble(marbles[i]);
+  };
+
+  const removeMarble = (position, newPosition, marbles, setMarbles) => {
+    // console.log();
+    const difference = (position - newPosition) / 2;
+    const posToRemove = position - difference;
+    console.log(posToRemove);
+    const newMarbles = marbles.slice();
+    console.log(newMarbles[position]);
+    newMarbles[posToRemove] = {
+      marble: "",
+      position: posToRemove,
+      color: "",
+      direction: "",
+      row: Math.floor(posToRemove / 10),
+      col: posToRemove % 10,
+    };
+    console.log(newMarbles[position]);
+
+    // setMarbles(newMarbles);
   };
 
   const handleMove = (selMarble, newMarble) => {
@@ -196,14 +241,54 @@ const preventJumpingMove = (marble, newMarble) => {
   }
 };
 
-const checkForchopping = (marbles, isBlackTurn, moveToPos, setHighlightPos) => {
+const checkForchopping = (
+  marbles,
+  isBlackTurn,
+  posToCheckChop,
+  setHighlightPos,
+  setRestrictMove,
+  setSelMarble
+) => {
   // const possibleChop = [];
   const blackOrWhite = isBlackTurn ? "black" : "white";
-  const diagonals = getDiagonals(moveToPos);
-  // console.log(diagonals);
-  const neighbors = getNeighbors(diagonals, moveToPos);
-  // console.log(neighbors);
-  setHighlightPos(neighbors);
+  // console.log(posToCheckChop.length);
+  const currentMarPos = posToCheckChop[posToCheckChop.length - 2];
+  console.log(currentMarPos);
+  const diagonals = [];
+  const neighbors = [];
+  posToCheckChop.map((position) => {
+    const diagonal = getDiagonals(position);
+    // console.log(diagonal);
+    neighbors.push(getNeighbors(diagonal, position));
+    // console.log(neighbors);
+    return null;
+  });
+  console.log(neighbors);
+
+  const possibleChop = [];
+  neighbors.map((neighbor) => {
+    if (neighbor.includes(currentMarPos)) {
+      neighbor.map((element) => {
+        console.log(marbles[currentMarPos].row !== marbles[element].row);
+        if (
+          (marbles[currentMarPos].row !== marbles[element].row &&
+            marbles[currentMarPos].col !== marbles[element].col) ||
+          !marbles[element].marble === ""
+        ) {
+          possibleChop.push(element, currentMarPos);
+          setRestrictMove({ ans: true, value: possibleChop });
+          setSelMarble(marbles[currentMarPos]);
+        }
+      });
+    }
+    return null;
+  });
+
+  console.log(possibleChop);
+  // if (possibleChop.length > 0) {
+  //   possibleChop.push()
+  // }
+  setHighlightPos(possibleChop);
 };
 
 const getNeighbors = (diagonals, position) => {
@@ -270,6 +355,7 @@ const getDiagonals = (position) => {
     }
     return null;
   });
+  // console.log(newDiagonals);
 
   return newDiagonals;
 };
