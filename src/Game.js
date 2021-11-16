@@ -66,6 +66,7 @@ const Game = () => {
   // console.log(marbles);
 
   useEffect(() => {
+    console.log("useEffect 1");
     // console.log(countMoves);
     if (countMoves < 2) return;
     // console.log(countMoves);
@@ -75,6 +76,7 @@ const Game = () => {
   }, [countMoves]);
 
   useEffect(() => {
+    console.log("useEffect 2");
     if (restrictMove.ans) {
       if (restrictMove.value.includes(clickedMarble)) {
         // console.log(marbles);
@@ -86,10 +88,18 @@ const Game = () => {
   }, [clickedMarble]);
 
   useEffect(() => {
+    console.log("useEffect 3");
+    if (countMoves < 2) return;
     if (restrictMove.ans) {
       // console.log(marbles);
       removeMarble(selMarble.position, marbles[clickedMarble].position);
-      setCountMoves(countMoves + 1);
+      // setCountMoves(countMoves + 1);
+    } else {
+      const value = checkForChopping();
+      if (carryOutChopping && !value) {
+        setIsBlackTurn(!isBlackTurn);
+        setCarryOutChopping(false);
+      }
     }
   }, [marbles]);
 
@@ -101,6 +111,7 @@ const Game = () => {
     //Disable all movement
     if (restrictMove.ans) {
       if (restrictMove.possSelection.includes(i) && !isMarbleSel) {
+        console.log("selection done");
         setHighlightPos([i]);
         setSelMarble(marbles[i]);
         setIsMarbleSel(true);
@@ -111,7 +122,9 @@ const Game = () => {
         // console.log(marbles);
         // removeMarble(selMarble.position, marbles[clickedMarble].position);
       } else if (restrictMove.value.includes(i) && isMarbleSel) {
+        console.log("chopping");
         setClickedMarble(i);
+        // setIsMarbleSel(false);
         return;
       }
     }
@@ -187,22 +200,22 @@ const Game = () => {
       }
       return null;
     });
-    console.log(possiblePos);
+    // console.log(possiblePos);
     // console.log(countMoves);
     const neighbors = [];
     const posForChop = [];
     possiblePos.map((position) => {
       const diagonal = getDiagonals(position);
-      console.log(diagonal);
+      // console.log(diagonal);
       const neighbor = getNeighbors(diagonal, position);
-      console.log(neighbor);
+      // console.log(neighbor);
       const isTrue = neighbor.some((element) => {
         return (
           marbles[element].color !== "" &&
           marbles[position].color !== marbles[element].color
         );
       });
-      console.log(isTrue);
+      // console.log(isTrue);
       if (isTrue) {
         neighbors.push(neighbor);
         posForChop.push(position);
@@ -210,8 +223,8 @@ const Game = () => {
       // console.log(neighbors);
       return null;
     });
-    console.log(neighbors);
-    console.log(posForChop);
+    // console.log(neighbors);
+    // console.log(posForChop);
 
     const possibleChop = [];
     const possSelection = [];
@@ -243,13 +256,14 @@ const Game = () => {
     }
 
     console.log(possibleChop, possSelection);
-    // if (possibleChop.length > 0) {
-    //   possibleChop.push()
-    // }
     setHighlightPos(possibleChop);
+    if (possibleChop.length === 0 || possSelection.length === 0) {
+      return false;
+    } else return true;
   };
 
   const removeMarble = (position, newPosition) => {
+    console.log("remove marble");
     // console.log(position, newPosition);
     const difference = (position - newPosition) / 2;
     const posToRemove = position - difference;
@@ -270,6 +284,7 @@ const Game = () => {
       value: [],
       possSelection: [],
     });
+    setCarryOutChopping(true);
     setMarbles(newMarbles);
   };
 
@@ -292,14 +307,14 @@ const Game = () => {
       // const newPosToCheck = countMoves.slice();
       // newPosToCheck.push(newMarble.position);
       // console.log(newPosToCheck);
-      setCountMoves(countMoves + 1);
+      setIsBlackTurn(!isBlackTurn);
+      setHighlightPos([]);
     }
+    setCountMoves(countMoves + 1);
 
     setMarbles(newMarbles);
 
     setIsMarbleSel(false);
-    setIsBlackTurn(!isBlackTurn);
-    setHighlightPos([]);
   };
 
   const status = (isBlackTurn ? "Black" : "White") + " turn";
