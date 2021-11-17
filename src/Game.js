@@ -97,11 +97,12 @@ const Game = () => {
     } else {
       const value = checkForChopping();
       if (carryOutChopping && !value) {
-        setIsBlackTurn(!isBlackTurn);
+        setIsBlackTurn((value) => !value);
         setCarryOutChopping(false);
+        // checkForChopping();
       }
     }
-  }, [marbles]);
+  }, [marbles, carryOutChopping]);
 
   const handleClick = (i) => {
     // notAllowed.push(i);
@@ -111,6 +112,7 @@ const Game = () => {
     //Disable all movement
     if (restrictMove.ans) {
       if (restrictMove.possSelection.includes(i) && !isMarbleSel) {
+        // Todo: add appropriate chopping pos
         console.log("selection done");
         setHighlightPos([i]);
         setSelMarble(marbles[i]);
@@ -210,9 +212,13 @@ const Game = () => {
       const neighbor = getNeighbors(diagonal, position);
       // console.log(neighbor);
       const isTrue = neighbor.some((element) => {
+        // console.log(marbles[element].col);
         return (
           marbles[element].color !== "" &&
-          marbles[position].color !== marbles[element].color
+          marbles[position].color !== marbles[element].color &&
+          marbles[element].col !== 9 &&
+          marbles[element].col !== 0 &&
+          marbles[position].row !== marbles[element].row
         );
       });
       // console.log(isTrue);
@@ -234,11 +240,25 @@ const Game = () => {
           // console.log(marbles[element].color);
           if (
             marbles[element].color !== "" &&
-            marbles[element].color !== marbles[posForChop[i]].color
+            marbles[element].color !== marbles[posForChop[i]].color &&
+            marbles[element].col !== 9 &&
+            marbles[element].col !== 0 &&
+            marbles[element].row !== marbles[posForChop[i]].row
           ) {
-            const diff = posForChop[i] - element;
-            const posToCheck = element - diff;
+            let diff;
+            let posToCheck;
+            if (posForChop[i] > element) {
+              diff = posForChop[i] - element;
+              posToCheck = element - diff;
+            } else {
+              diff = element - posForChop[i];
+              posToCheck = element + diff;
+            }
+            // console.log(posToCheck);
             if (marbles[posToCheck].color === "") {
+              // console.log(posForChop[i]);
+              // console.log(element);
+              // console.log(posToCheck);
               possibleChop.push(posToCheck);
               possSelection.push(posForChop[i]);
               setRestrictMove({
@@ -249,6 +269,7 @@ const Game = () => {
               setIsMarbleSel(false);
             }
           }
+          return null;
         });
 
         return null;
