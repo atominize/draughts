@@ -61,7 +61,9 @@ const Game = () => {
   });
   const [countMoves, setCountMoves] = useState(0);
   const [clickedMarble, setClickedMarble] = useState(-1);
+  const [selectedPos, setSelectedPos] = useState(-1);
   const [carryOutChopping, setCarryOutChopping] = useState(false);
+  const [posToAllowChop, setPosToAllowChop] = useState(-1);
   // setMarbles([])
   // console.log(marbles);
 
@@ -78,14 +80,33 @@ const Game = () => {
   useEffect(() => {
     console.log("useEffect 2");
     if (restrictMove.ans) {
-      if (restrictMove.value.includes(clickedMarble)) {
+      console.log(clickedMarble, posToAllowChop);
+      if (clickedMarble === posToAllowChop) {
         // console.log(marbles);
         handleMove(selMarble, marbles[clickedMarble]);
-        // console.log(marbles);
+        setPosToAllowChop(-1);
       }
       // return;
     }
   }, [clickedMarble]);
+
+  useEffect(() => {
+    console.log("useEffect 4");
+    if (restrictMove.ans) {
+      // Todo: add appropriate chopping pos
+      // console.log(restrictMove.possSelection);
+      const indexSelected = indexOfElement(
+        restrictMove.possSelection,
+        selectedPos
+      );
+      const restrictValSel = restrictMove.value[indexSelected];
+      setPosToAllowChop(restrictValSel);
+      console.log("selection done");
+      setHighlightPos([selectedPos, restrictValSel]);
+      setSelMarble(marbles[selectedPos]);
+      setIsMarbleSel(true);
+    }
+  }, [selectedPos]);
 
   useEffect(() => {
     console.log("useEffect 3");
@@ -111,19 +132,14 @@ const Game = () => {
 
     //Disable all movement
     if (restrictMove.ans) {
-      if (restrictMove.possSelection.includes(i) && !isMarbleSel) {
-        // Todo: add appropriate chopping pos
-        console.log("selection done");
-        setHighlightPos([i]);
-        setSelMarble(marbles[i]);
-        setIsMarbleSel(true);
+      // console.log(restrictMove.possSelection.includes(i));
+      if (restrictMove.possSelection.includes(i)) {
+        setSelectedPos(i);
         return;
-        // setClickedMarble(i);
-        // console.log(marbles);
-        // handleMove(selMarble, marbles[i]);
-        // console.log(marbles);
-        // removeMarble(selMarble.position, marbles[clickedMarble].position);
-      } else if (restrictMove.value.includes(i) && isMarbleSel) {
+        // } else if (restrictMove.possSelection.includes(i) && isMarbleSel) {
+        //   setSelectedPos(i);
+        //   return;
+      } else if (restrictMove.value.includes(i)) {
         console.log("chopping");
         setClickedMarble(i);
         // setIsMarbleSel(false);
@@ -353,6 +369,12 @@ const Game = () => {
       </div>
     </div>
   );
+};
+
+const indexOfElement = (posArray, posElement) => {
+  return posArray.findIndex((element) => {
+    return element === posElement;
+  });
 };
 
 const checkIfAllowed = (position) => {
